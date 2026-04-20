@@ -1,22 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abeer AR</title>
+    <title>Abeer AR - Pyramid</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
+        /* تصميم صفحة البداية باسم عبير */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
+            background: radial-gradient(circle, #2a2a2a 0%, #000000 100%);
+            display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 9999;
-            color: white; font-family: sans-serif;
+            color: white; font-family: 'Segoe UI', sans-serif; text-align: center;
         }
-        .abeer-logo { font-size: 50px; color: #ff0055; font-weight: bold; letter-spacing: 5px; }
+        .abeer-brand {
+            font-size: 55px; font-weight: bold; color: #ff0055;
+            letter-spacing: 7px; text-shadow: 0 0 15px rgba(255, 0, 85, 0.7);
+            margin: 0;
+        }
+        .sub-text { font-size: 15px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
         button {
-            margin-top: 20px; padding: 15px 40px; font-size: 18px;
-            background: #ff0055; color: white; border: none; border-radius: 50px;
+            margin-top: 40px; padding: 18px 50px; font-size: 20px;
+            background: transparent; color: white; border: 2px solid #ff0055;
+            border-radius: 50px; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        }
+        button:hover { background: #ff0055; box-shadow: 0 0 25px rgba(255, 0, 85, 0.8); }
+        #ar-hint {
+            position: fixed; bottom: 30px; width: 100%; text-align: center;
+            color: white; font-family: sans-serif; z-index: 10; pointer-events: none;
+            text-shadow: 1px 1px 5px rgba(0,0,0,0.8); display: none;
         }
     </style>
 </head>
@@ -24,39 +39,48 @@
 <body style="margin: 0; overflow: hidden;">
 
     <div id="overlay">
-        <div class="abeer-logo">ABEER</div>
-        <button onclick="startExperience()">ابدأ العرض</button>
+        <div class="abeer-brand">ABEER</div>
+        <div class="sub-text">Interactive AR Experience</div>
+        <button onclick="startAR()">ابدأ العرض</button>
     </div>
+
+    <div id="ar-hint">حركي إصبعك على الشاشة لتدوير الهرم</div>
 
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
         
-        <a-entity light="type: ambient; intensity: 0.8"></a-entity>
-        <a-entity light="type: directional; position: 1 1 1; intensity: 0.8"></a-entity>
+        <a-entity light="type: ambient; intensity: 0.4"></a-entity>
+        <a-entity light="type: directional; intensity: 1; position: 1 3 1"></a-entity>
+        <a-entity light="type: point; intensity: 0.8; position: -2 1 2; color: #ffaaaa"></a-entity>
 
-        <a-entity id="boxParent" position="0 0 -1.5">
+        <a-entity camera position="0 0 0"></a-entity>
+
+        <a-entity id="pyramid-container" position="0 0 -1.8">
             <a-cone 
-                id="myCone"
-                radius-bottom="0.3" radius-top="0" height="0.6"
-                material="color: #ff0055; metalness: 0.5; roughness: 0.2;"
-                rotation="0 0 0">
-            </a-cone>
+                id="target-pyramid"
+                radius-bottom="0.5" 
+                radius-top="0" 
+                height="1.0" 
+                segments-radial="4" 
+                material="color: #ff0055; metalness: 0.8; roughness: 0.1; emissive: #220005"
+                rotation="0 45 0"> </a-cone>
         </a-entity>
 
-        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        function startExperience() {
+        function startAR() {
+            // إخفاء الواجهة وإظهار التنبيه
             document.getElementById('overlay').style.display = 'none';
+            document.getElementById('ar-hint').style.display = 'block';
             
-            // للأيفون: تفعيل الحساسات
+            // طلب إذن الحساسات للأيفون (مهم)
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission();
             }
         }
 
-        // تحريك المخروط بلمسة الإصبع
-        let cone = document.querySelector('#myCone');
+        // كود تحريك الهرم بالأصابع
+        const pyramid = document.querySelector('#target-pyramid');
         let startX, startY;
 
         window.addEventListener('touchstart', e => {
@@ -68,10 +92,11 @@
             let deltaX = e.touches[0].clientX - startX;
             let deltaY = e.touches[0].clientY - startY;
             
-            let rotation = cone.getAttribute('rotation');
-            cone.setAttribute('rotation', {
-                x: rotation.x + deltaY * 0.5,
-                y: rotation.y + deltaX * 0.5,
+            // تدوير الهرم بناءً على سحب الإصبع
+            let rotation = pyramid.getAttribute('rotation');
+            pyramid.setAttribute('rotation', {
+                x: rotation.x + deltaY * 0.5, // حركة للأعلى والأسفل
+                y: rotation.y + deltaX * 0.5, // حركة لليسار واليمين
                 z: 0
             });
             
