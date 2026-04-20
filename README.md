@@ -1,85 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Abeer AR Experience</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abeer AR Project</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://raw.githack.com/fcor/aframe-gestures/master/dist/gestures.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
+    
     <style>
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; color: white; font-family: sans-serif; text-align: center;
+            background: #000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 999;
+            color: white; font-family: sans-serif;
         }
-        .brand-name { font-size: 40px; font-weight: bold; letter-spacing: 8px; color: #ff0055; margin: 0; }
+        .abeer-text { font-size: 45px; color: #ff0055; letter-spacing: 5px; font-weight: bold; }
         button {
-            padding: 15px 40px; font-size: 18px; cursor: pointer; border-radius: 30px;
-            border: 2px solid #ff0055; background: transparent; color: white; margin-top: 20px;
-        }
-        /* تنبيه للمستخدم */
-        #ar-instruction {
-            position: fixed; bottom: 20px; width: 100%; text-align: center;
-            color: white; z-index: 100; display: none; font-family: sans-serif;
-            text-shadow: 1px 1px 2px black;
+            margin-top: 20px; padding: 15px 40px; font-size: 18px;
+            background: #ff0055; color: white; border: none; border-radius: 50px;
         }
     </style>
 </head>
-
-<body style="margin: 0; overflow: hidden;">
+<body>
 
     <div id="overlay">
-        <p class="brand-name">ABEER</p>
-        <p style="color: #888;">Interactive AR Cone</p>
-        <button onclick="startAR()">ابدأ العرض</button>
+        <div class="abeer-text">ABEER</div>
+        <p>تصميم واقع معزز تفاعلي</p>
+        <button id="startButton">ابدأ العرض</button>
     </div>
 
-    <div id="ar-instruction">وجهي الكاميرا حولك وسيظهر المخروط</div>
-
-    <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;"
-        vr-mode-ui="enabled: false"
-        gesture-detector>
-
-        <a-entity light="type: ambient; intensity: 0.8;"></a-entity>
+    <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/examples/image-tracking/assets/card-example/card.mind;" 
+             embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" 
+             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         
-        <a-entity 
-            id="cone-wrapper" 
-            position="0 0 -5" 
-            gesture-handler>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity id="target" position="0 0 -1">
             <a-cone 
-                class="clickable"
-                radius-bottom="0.5" 
+                id="cone"
+                radius-bottom="0.2" 
                 radius-top="0" 
-                height="1.2" 
-                material="color: #ff0055; emissive: #330011;"
-                animation="property: rotation; to: 0 360 0; loop: true; dur: 8000">
+                height="0.5" 
+                material="color: #ff0055; metalness: 0.6; roughness: 0.2"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 5000">
             </a-cone>
         </a-entity>
-
-        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        function startAR() {
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('ar-instruction').style.display = 'block';
-            
-            // طلب إذن الوصول للحساسات (مهم جداً للأيفون)
-            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                DeviceMotionEvent.requestPermission()
-                    .then(response => {
-                        if (response == 'granted') {
-                            console.log("Permission granted");
-                        }
-                    })
-                    .catch(console.error);
+        const startButton = document.getElementById('startButton');
+        const overlay = document.getElementById('overlay');
+        const cone = document.getElementById('cone');
+
+        startButton.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            // تشغيل الصوت أو الحساسات إذا لزم الأمر
+        });
+
+        // البرمجة الخاصة بالتحكم باللمس (التحريك بالأصابع)
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        window.addEventListener('touchstart', (e) => {
+            isDragging = true;
+        });
+
+        window.addEventListener('touchend', (e) => {
+            isDragging = false;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                let deltaX = e.touches[0].pageX - previousMousePosition.x;
+                let deltaY = e.touches[0].pageY - previousMousePosition.y;
+
+                // تحريك المخروط بناءً على حركة الأصبع
+                cone.object3D.rotation.y += deltaX * 0.01;
+                cone.object3D.rotation.x += deltaY * 0.01;
             }
-        }
+            previousMousePosition = {
+                x: e.touches[0].pageX,
+                y: e.touches[0].pageY
+            };
+        });
     </script>
 </body>
 </html>
