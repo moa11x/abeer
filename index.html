@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abeer 3D Experience</title>
+    <title>Abeer AR</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -12,95 +13,70 @@
             justify-content: center; align-items: center; z-index: 9999;
             color: white; font-family: sans-serif;
         }
-        .abeer-title { font-size: 40px; color: #ff0055; font-weight: bold; letter-spacing: 5px; margin: 0; text-shadow: 0 0 10px #ff0055; }
+        .abeer-logo { font-size: 50px; color: #ff0055; font-weight: bold; letter-spacing: 5px; }
         button {
-            margin-top: 30px; padding: 15px 40px; font-size: 18px;
+            margin-top: 20px; padding: 15px 40px; font-size: 18px;
             background: #ff0055; color: white; border: none; border-radius: 50px;
-        }
-        #ui-hint {
-            position: fixed; bottom: 30px; width: 100%; text-align: center;
-            color: white; font-family: sans-serif; z-index: 10; pointer-events: none;
-            text-shadow: 1px 1px 5px rgba(0,0,0,0.5); display: none;
         }
     </style>
 </head>
 
-<body style="margin: 0; overflow: hidden; background: #000;">
+<body style="margin: 0; overflow: hidden;">
 
     <div id="overlay">
-        <h1 class="abeer-title">ABEER</h1>
-        <p>تحريك مخروط ثلاثي الأبعاد</p>
-        <button onclick="startAR()">ابدأ التجربة</button>
+        <div class="abeer-logo">ABEER</div>
+        <button onclick="startExperience()">ابدأ العرض</button>
     </div>
 
-    <div id="ui-hint">حركي إصبعك على الشاشة لتدوير المخروط</div>
-
-    <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
         
-        <a-entity light="type: ambient; intensity: 0.5"></a-entity>
-        <a-entity light="type: directional; intensity: 1; position: 1 2 1"></a-entity>
-        <a-entity light="type: point; intensity: 1; position: -2 1 2; color: #ff0055"></a-entity>
+        <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+        <a-entity light="type: directional; position: 1 1 1; intensity: 0.8"></a-entity>
 
-        <a-entity camera position="0 0 0"></a-entity>
-
-        <a-entity id="cone-container" position="0 0 -1.5">
+        <a-entity id="boxParent" position="0 0 -1.5">
             <a-cone 
-                id="target-cone"
-                radius-bottom="0.4" 
-                radius-top="0" 
-                height="0.9" 
-                material="color: #ff0055; metalness: 0.7; roughness: 0.2; emissive: #220005"
+                id="myCone"
+                radius-bottom="0.3" radius-top="0" height="0.6"
+                material="color: #ff0055; metalness: 0.5; roughness: 0.2;"
                 rotation="0 0 0">
             </a-cone>
         </a-entity>
 
+        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        const cone = document.querySelector('#target-cone');
-        let isDragging = false;
-        let lastTouchX, lastTouchY;
-
-        function startAR() {
+        function startExperience() {
             document.getElementById('overlay').style.display = 'none';
-            document.getElementById('ui-hint').style.display = 'block';
             
-            // طلب إذن الحساسات للأيفون
+            // للأيفون: تفعيل الحساسات
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission();
             }
         }
 
-        // منطق التحريك المتقدم بالأصابع
-        window.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            lastTouchX = e.touches[0].clientX;
-            lastTouchY = e.touches[0].clientY;
+        // تحريك المخروط بلمسة الإصبع
+        let cone = document.querySelector('#myCone');
+        let startX, startY;
+
+        window.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
         });
 
-        window.addEventListener('touchend', () => {
-            isDragging = false;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-
-            let deltaX = e.touches[0].clientX - lastTouchX;
-            let deltaY = e.touches[0].clientY - lastTouchY;
-
-            // تدوير الشكل بناءً على سحب الإصبع
-            let currentRotation = cone.getAttribute('rotation');
+        window.addEventListener('touchmove', e => {
+            let deltaX = e.touches[0].clientX - startX;
+            let deltaY = e.touches[0].clientY - startY;
             
-            // تحريك لليسار واليمين (محور Y)
-            // تحريك للأعلى والأسفل (محور X)
+            let rotation = cone.getAttribute('rotation');
             cone.setAttribute('rotation', {
-                x: currentRotation.x + deltaY * 0.5,
-                y: currentRotation.y + deltaX * 0.5,
+                x: rotation.x + deltaY * 0.5,
+                y: rotation.y + deltaX * 0.5,
                 z: 0
             });
-
-            lastTouchX = e.touches[0].clientX;
-            lastTouchY = e.touches[0].clientY;
+            
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
         });
     </script>
 </body>
