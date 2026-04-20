@@ -1,23 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abeer AR - Final</title>
+    <title>Abeer AR - Selection</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 9999;
-            color: white; font-family: sans-serif;
+            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; color: white; font-family: sans-serif; text-align: center;
         }
-        .abeer-logo { font-size: 50px; color: #ff0055; font-weight: bold; letter-spacing: 5px; }
+        .abeer-logo { font-size: 50px; color: #ff0055; font-weight: bold; letter-spacing: 5px; margin-bottom: 10px; }
+        .instruction { color: #888; margin-bottom: 30px; font-size: 14px; }
+        .btn-container { display: flex; flex-direction: column; gap: 15px; width: 200px; }
         button {
-            margin-top: 20px; padding: 15px 40px; font-size: 18px;
-            background: #ff0055; color: white; border: none; border-radius: 50px;
+            padding: 15px; font-size: 18px; cursor: pointer; border-radius: 50px;
+            border: 2px solid #ff0055; background: transparent; color: white;
+            transition: 0.3s;
         }
+        button:active { background: #ff0055; transform: scale(0.95); }
     </style>
 </head>
 
@@ -25,7 +29,11 @@
 
     <div id="overlay">
         <div class="abeer-logo">ABEER</div>
-        <button onclick="startExperience()">ابدأ العرض</button>
+        <p class="instruction">اختاري الشكل المطلوب للعرض:</p>
+        <div class="btn-container">
+            <button onclick="startExperience(4)">عرض الهرم (4 زوايا)</button>
+            <button onclick="startExperience(3)">عرض المثلث (3 زوايا)</button>
+        </div>
     </div>
 
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
@@ -33,33 +41,35 @@
         <a-entity light="type: ambient; intensity: 0.8"></a-entity>
         <a-entity light="type: directional; position: 1 1 1; intensity: 0.8"></a-entity>
 
-        <a-entity id="pyramid-group" position="0 0 -2" rotation="0 45 0">
-            <a-cone 
-                radius-bottom="0.5" radius-top="0" height="0.8" segments-radial="4"
-                material="color: #ff0055; flatShading: true;">
-            </a-cone>
+        <a-entity id="shape-group" position="0 0 -2" rotation="0 45 0">
+            <a-cone id="main-shape" radius-bottom="0.5" radius-top="0" height="0.8" material="color: #ff0055; flatShading: true;"></a-cone>
             
-            <a-cone 
-                radius-bottom="0.505" radius-top="0.01" height="0.81" segments-radial="4"
-                material="color: #000000; wireframe: true; wireframe-linewidth: 5;">
-            </a-cone>
+            <a-cone id="outline-shape" radius-bottom="0.505" radius-top="0.01" height="0.81" material="color: #000000; wireframe: true; wireframe-linewidth: 5;"></a-cone>
         </a-entity>
 
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        function startExperience() {
+        function startExperience(sides) {
+            // إخفاء الواجهة
             document.getElementById('overlay').style.display = 'none';
+
+            // تعديل عدد الجوانب بناءً على الاختيار
+            const mainShape = document.getElementById('main-shape');
+            const outlineShape = document.getElementById('outline-shape');
             
+            mainShape.setAttribute('segments-radial', sides);
+            outlineShape.setAttribute('segments-radial', sides);
+
             // طلب إذن الحساسات للأيفون
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().catch(console.error);
             }
         }
 
-        // تحريك الهرم باللمس
-        let group = document.querySelector('#pyramid-group');
+        // كود التحريك الموحد (يشتغل مع الهرم والمثلث)
+        let group = document.querySelector('#shape-group');
         let startX, startY;
 
         window.addEventListener('touchstart', e => {
