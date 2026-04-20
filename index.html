@@ -1,37 +1,22 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Abeer AR - Clear Pyramid Edges</title>
+    <title>Abeer AR - Final</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        /* تصميم صفحة البداية باسم عبير */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #2a2a2a 0%, #000000 100%);
-            display: flex; flex-direction: column;
+            background: #000; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 9999;
-            color: white; font-family: 'Segoe UI', sans-serif; text-align: center;
+            color: white; font-family: sans-serif;
         }
-        .abeer-brand {
-            font-size: 55px; font-weight: bold; color: #ff0055;
-            letter-spacing: 7px; text-shadow: 0 0 15px rgba(255, 0, 85, 0.7);
-            margin: 0;
-        }
-        .sub-text { font-size: 15px; color: #aaa; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
+        .abeer-logo { font-size: 50px; color: #ff0055; font-weight: bold; letter-spacing: 5px; }
         button {
-            margin-top: 40px; padding: 18px 50px; font-size: 20px;
-            background: transparent; color: white; border: 2px solid #ff0055;
-            border-radius: 50px; cursor: pointer; transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
-        }
-        button:hover { background: #ff0055; box-shadow: 0 0 25px rgba(255, 0, 85, 0.8); }
-        #ar-hint {
-            position: fixed; bottom: 30px; width: 100%; text-align: center;
-            color: white; font-family: sans-serif; z-index: 10; pointer-events: none;
-            text-shadow: 1px 1px 5px rgba(0,0,0,0.8); display: none;
+            margin-top: 20px; padding: 15px 40px; font-size: 18px;
+            background: #ff0055; color: white; border: none; border-radius: 50px;
         }
     </style>
 </head>
@@ -39,42 +24,63 @@
 <body style="margin: 0; overflow: hidden;">
 
     <div id="overlay">
-        <div class="abeer-brand">ABEER</div>
-        <div class="sub-text">Interactive AR Experience</div>
-        <button onclick="startAR()">ابدأ العرض</button>
+        <div class="abeer-logo">ABEER</div>
+        <button onclick="startExperience()">ابدأ العرض</button>
     </div>
-
-    <div id="ar-hint">حركي إصبعك على الشاشة لتدوير الهرم وتفحص زواياه</div>
 
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
         
-        <a-entity light="type: ambient; intensity: 0.6"></a-entity>
-        <a-entity light="type: directional; intensity: 1; position: 1 3 1"></a-entity>
+        <a-entity light="type: ambient; intensity: 0.8"></a-entity>
+        <a-entity light="type: directional; position: 1 1 1; intensity: 0.8"></a-entity>
 
-        <a-entity camera position="0 0 0"></a-entity>
-
-        <a-entity id="pyramid-container" position="0 0 -1.8" rotation="0 45 0">
-            
+        <a-entity id="pyramid-group" position="0 0 -2" rotation="0 45 0">
             <a-cone 
-                id="target-pyramid"
-                radius-bottom="0.5" 
-                radius-top="0" 
-                height="1.0" 
-                segments-radial="4" 
-                material="color: #ff0055; metalness: 0.7; roughness: 0.2; emissive: #220005">
+                radius-bottom="0.5" radius-top="0" height="0.8" segments-radial="4"
+                material="color: #ff0055; flatShading: true;">
             </a-cone>
             
             <a-cone 
-                id="pyramid-wireframe"
-                radius-bottom="0.51" radius-top="0.01" 
-                height="1.02" 
-                segments-radial="4" 
-                material="color: #000000; wireframe: true; wireframe-linewidth: 3;">
+                radius-bottom="0.505" radius-top="0.01" height="0.81" segments-radial="4"
+                material="color: #000000; wireframe: true; wireframe-linewidth: 5;">
             </a-cone>
-            
         </a-entity>
 
+        <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        function start
+        function startExperience() {
+            document.getElementById('overlay').style.display = 'none';
+            
+            // طلب إذن الحساسات للأيفون
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission().catch(console.error);
+            }
+        }
+
+        // تحريك الهرم باللمس
+        let group = document.querySelector('#pyramid-group');
+        let startX, startY;
+
+        window.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+
+        window.addEventListener('touchmove', e => {
+            let deltaX = e.touches[0].clientX - startX;
+            let deltaY = e.touches[0].clientY - startY;
+            
+            let rotation = group.getAttribute('rotation');
+            group.setAttribute('rotation', {
+                x: rotation.x + deltaY * 0.5,
+                y: rotation.y + deltaX * 0.5,
+                z: 0
+            });
+            
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+    </script>
+</body>
+</html>
